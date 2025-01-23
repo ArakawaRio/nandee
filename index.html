@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BLE M5Core2 Vibration</title>
+</head>
+<body>
+  <h1>Press Enter to Vibrate M5Core2</h1>
+  <button id="connectBtn">Connect to M5Core2</button>
+
+  <script>
+    let device;
+    let characteristic;
+
+    // M5Core2のサービスUUIDとキャラクタリスティックUUID
+    const SERVICE_UUID = '12345678-1234-1234-1234-1234567890ab';  // M5Core2のサービスUUID
+    const CHARACTERISTIC_UUID = 'abcd1234-5678-1234-5678-abcdefabcdef';  // M5Core2のキャラクタリスティックUUID
+
+    // BLEデバイスに接続する
+    document.getElementById('connectBtn').addEventListener('click', async () => {
+      try {
+        device = await navigator.bluetooth.requestDevice({
+          filters: [{ services: [SERVICE_UUID] }]
+        });
+        const server = await device.gatt.connect();
+        const service = await server.getPrimaryService(SERVICE_UUID);
+        characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+        console.log('Connected to M5Core2');
+      } catch (error) {
+        console.log('Connection failed', error);
+      }
+    });
+
+    // エンターキーの押下を監視し、M5Core2に信号を送る
+    document.addEventListener('keydown', async (event) => {
+      if (event.key === 'Enter' && characteristic) {
+        try {
+          const encoder = new TextEncoder();
+          const value = encoder.encode('ENTER_PRESSED');
+          await characteristic.writeValue(value);
+          console.log('Sent ENTER_PRESSED to M5Core2');
+        } catch (error) {
+          console.log('Failed to send data to M5Core2', error);
+        }
+      }
+    });
+  </script>
+</body>
+</html>
